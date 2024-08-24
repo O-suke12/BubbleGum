@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>D3 Test</title>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+</head>
+
+<body>
+    <script>
+        const width = 500;
+        const height = 500;
+        const context = DOM.context2d(width, height);
+        const canvas = context.canvas;
+        const radius = 20;
+
+        const circles = d3.range(324).map((i) => ({
+            x: (i % 25) * (radius + 1) * 2,
+            y: Math.floor(i / 25) * (radius + 1) * 2
+        }));
+
+        const simulation = d3.forceSimulation(circles)
+            .force("collide", d3.forceCollide(radius + 1).iterations(4))
+            .on("tick", drawCircles);
+
+        d3.select(canvas)
+            .call(d3.drag()
+                .subject(subject)
+                .on("start", started)
+                .on("drag", dragged)
+                .on("end", ended));
+
+        function drawCircles() {
+            context.clearRect(0, 0, width, height);
+            context.save();
+            circles.forEach(drawCircle);
+            context.strokeStyle = "#fff";
+            context.stroke();
+        }
+
+        function drawCircle(d) {
+            context.beginPath();
+            context.fillStyle = d.type;
+            context.moveTo(d.x + radius, d.y);
+            context.arc(d.x, d.y, radius, 0, 2 * Math.PI);
+            context.fill();
+        }
+
+        function subject(event) {
+            return simulation.find(event.x, event.y, radius);
+        }
+
+        function started(event) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            event.subject.fx = event.subject.x;
+            event.subject.fy = event.subject.y;
+        }
+
+        function dragged(event) {
+            event.subject.fx = event.x;
+            event.subject.fy = event.y;
+        }
+
+        function ended(event) {
+            if (!event.active) simulation.alphaTarget(0);
+            event.subject.fx = null;
+            event.subject.fy = null;
+        }
+
+        return canvas;
+
+
+    </script>
+</body>
+
+</html>
